@@ -1,0 +1,21 @@
+# 16:29 31/07/2018
+version: "3"
+services:
+  web:
+   # image name
+   image: tomcat_single:8.5.32-jre8-slim
+   deploy:
+     replicas: 3
+     resources:
+       limits:
+         cpus: "0.2"
+         memory: "512M"
+     restart_policy:
+         condition: on-failure
+   ports:
+    - "80:8080"
+   networks:
+    - my-overlay-network
+
+networks:
+  my-overlay-network:
