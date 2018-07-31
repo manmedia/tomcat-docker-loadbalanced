@@ -1,37 +1,36 @@
-## Welcome to GitHub Pages
+How to Build:
 
-You can use the [editor on GitHub](https://github.com/manmedia/tomcat-docker-loadbalanced/edit/master/index.md) to maintain and preview the content for your website in Markdown files.
+1) Download the source.
+2) Build the image using Dockerfile and cache it in your repo (note the dot below, you need to be in the root directory):
+   docker build -t tomcat_single:8.5.32-jre8-slim .
+3) Create an overlay network 
+   docker network create --attachable -d overlay my-overlay-network
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
 
-### Markdown
+SPIN UP A SINGLE CONTAINER
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+a) docker run --rm -tid --network=my-overlay-network -p 80:8080 --name my-tomcat-1 tomcat_single:8.5.32-jre8-slim
+b) Confirm that the logs are coming with no errors:
+   docker logs my-tomcat-1
+c) Navigate to welcome page to see hostname and time information:
+   localhost/welcome.jsp
+   
 
-```markdown
-Syntax highlighted code block
+COMPOSE A SERVICE STACK
 
-# Header 1
-## Header 2
-### Header 3
+Pre requisite
 
-- Bulleted
-- List
+a) Stop and remove all containes created previously - using docker rm -f <container_id/container_name>
+b) Browse to source folder.
+c) Compose a service (you should have docker-compose installed beforehand)
+   docker stack deploy -c docker-compose.yml mytomcat_loadbalanced
+   
+   The above will create a network and service to have 3 tomcat containers running. You can check the status by typing:
+   docker service ls
+   
+   The output will be something similar:
+   
+ID             NAME                        MODE         REPLICAS     IMAGE                            PORTS
+o9scx60jon19   mytomcat_loadbalanced_web   replicated   3/3          tomcat_single:8.5.32-jre8-slim      *:80->8080/tcp
 
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/manmedia/tomcat-docker-loadbalanced/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+And use 2/3 different browser windows to hit localhost/welcome.jsp to see that they are being loadbalanced to different hosts.
